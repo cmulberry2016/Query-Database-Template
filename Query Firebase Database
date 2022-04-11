@@ -1,0 +1,88 @@
+// Push Data to Realtime Database
+
+public void UploadData()
+{
+
+  // Reference User
+  User user = new User();
+
+  // Reference profile setup InputFields
+  user.Name = interfaceReference.Name;
+
+  user.Tagline = interfaceReference.Tagline;
+
+  user.Filter = interfaceReference.Filter;
+
+  user.Bio = interfaceReference.Bio;
+
+  user.LinkedIn = interfaceReference.LinkedIn;
+
+  user.LoginTime = System.DateTime.UtcNow.ToLocalTime().ToString("HH:mm:s");
+
+  user.Feedback = interfaceReference.Feedback;
+
+  string json = JsonUtility.ToJson(user);
+
+  // Reference Users branch
+  reference.Child("Users").Child(user.Name).SetRawJsonValueAsync(json).ContinueWith(task =>
+  {
+  
+  if (task.IsCompleted)
+  {
+     Debug.Log("Successfully added data to Firebase");
+
+     CheckinStatus = true;
+     
+  }
+  
+  else
+  {
+  
+     Debug.Log("Failed to upload user data");
+  
+  };
+
+      });
+        
+}
+
+// Pull Data from Realtime Database
+
+public void DownloadData()
+{
+
+  Debug.Log("Querying Database");
+
+  FirebaseDatabase.DefaultInstance.GetReference("Users").OrderByChild("Reference_Node").EqualTo("Node_to_Find).ValueChanged += Script_ValueChanged;
+
+  void Script_ValueChanged(object sender, ValueChangedEventArgs e)
+  {
+  
+    // Create snapshot array of users profile
+    var ProfileProperties = e.Snapshot;
+
+    // Update Interface through with Queried Profile protperties
+    foreach (var property in ProfileProperties.Children)
+    {
+    
+      interfaceReference.FocusedUsernameString = property.Child("Name").Value.ToString();
+
+      interfaceReference.FocusedTaglineString = property.Child("Tagline").Value.ToString();
+
+      interfaceReference.FocusedFilterString = property.Child("Filter").Value.ToString(); // Premium Unlock
+
+      interfaceReference.FocusedBioString = property.Child("Bio").Value.ToString();
+
+      interfaceReference.FocusedLinkedInString = property.Child("LinkedIn").Value.ToString();
+
+    }
+
+    // Stop Query once a profile has been found
+    profileLoaded = true;
+
+    Debug.Log("Profile Found");
+    }
+    
+   }
+   
+}
